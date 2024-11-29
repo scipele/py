@@ -1,95 +1,132 @@
-data_id|product_name|unit_price|uom
-4189|#18-2C Flat THHN-PVC Tray Cable|$0.22|ft.
-649|#18-3C THHN-PVC Tray Cable|$0.31|ft.
-652|#18-4C THHN-PVC Tray Cable|$0.39|ft.
-655|#18-5C THHN-PVC Tray Cable|$0.47|ft.
-658|#18-7C THHN-PVC Tray Cable|$0.87|ft.
-3088|#18-9C THHN-PVC Tray Cable|$1.09|ft.
-2854|#18-12C THHN-PVC Tray Cable|$1.54|ft.
-4924|#18-15C THHN-PVC Tray Cable|$1.86|ft.
-4219|#18-19C THHN-PVC Tray Cable|$2.50|ft.
-4927|#18-25C THHN-PVC Tray Cable|$3.19|ft.
-10549|#18-37C THHN-PVC Tray Cable|$3.54|ft.
-661|#16-2C THHN-PVC Tray Cable|$0.29|ft.
-664|#16-3C THHN-PVC Tray Cable|$0.41|ft.
-667|#16-4C THHN-PVC Tray Cable|$0.57|ft.
-670|#16-5C THHN-PVC Tray Cable|$0.65|ft.
-8803|#16-6C THHN-PVC Tray Cable|$0.77|ft.
-673|#16-7C THHN-PVC Tray Cable|$0.87|ft.
-676|#16-9C THHN-PVC Tray Cable|$1.14|ft.
-33722|#16-10C THHN-PVC Tray Cable|$1.36|ft.
-3091|#16-12C THHN-PVC Tray Cable|$1.58|ft.
-3094|#16-15C THHN-PVC Tray Cable|$2.10|ft.
-3097|#16-19C THHN-PVC Tray Cable|$2.73|ft.
-4159|#16-25C THHN-PVC Tray Cable|$4.47|ft.
-3100|#16-30C THHN-PVC Tray Cable|$5.55|ft.
-7741|#16-50C THHN-PVC Tray Cable|$7.22|ft.
-679|#14-2C THHN-PVC Tray Cable|$0.37|ft.
-682|#14-3C THHN-PVC Tray Cable|$0.57|ft.
-685|#14-4C THHN-PVC Tray Cable|$0.73|ft.
-688|#14-5C THHN-PVC Tray Cable|$0.95|ft.
-691|#14-7C THHN-PVC Tray Cable|$1.28|ft.
-694|#14-9C THHN-PVC Tray Cable|$1.65|ft.
-3103|#14-12C THHN-PVC Tray Cable|$2.23|ft.
-3106|#14-15C THHN-PVC Tray Cable|$2.93|ft.
-5842|#14-19C THHN-PVC Tray Cable|$3.49|ft.
-4156|#14-25C THHN-PVC Tray Cable|$5.04|ft.
-4909|#14-30C THHN-PVC Tray Cable|N/A|NA
-3109|#14-37C THHN-PVC Tray Cable|$8.15|ft.
-4153|#14-50C THHN-PVC Tray Cable|$14.60|ft.
-697|#12-2C THHN-PVC Tray Cable|$0.57|ft.
-700|#12-3C THHN-PVC Tray Cable|$0.87|ft.
-33170|#12-3C THHN-PVC Tray Cable (Black, White, Green)|$0.87|ft.
-706|#12-4C THHN-PVC Tray Cable|$1.22|ft.
-709|#12-5C THHN-PVC Tray Cable|$1.44|ft.
-712|#12-7C THHN-PVC Tray Cable|$1.95|ft.
-715|#12-9C THHN-PVC Tray Cable|$2.56|ft.
-3112|#12-12C THHN-PVC Tray Cable|$3.43|ft.
-3115|#12-15C THHN-PVC Tray Cable|$3.83|ft.
-3118|#12-19C THHN-PVC Tray Cable|$5.90|ft.
-2011|#10-2C Flat THHN-PVC Tray Cable|$0.89|ft.
-718|#10-3C THHN-PVC Tray Cable|$1.33|ft.
-33173|#10-3C THHN-PVC Tray Cable (Black, White, Green)|$1.33|ft.
-724|#10-4C THHN-PVC Tray Cable|$1.70|ft.
-33462|#10-4C THHN-PVC Tray Cable (Black, White, Red, Green)|$1.96|ft.
-727|#10-5 THHN-PVC Tray Cable|$2.22|ft.
-730|#10-7 THHN-PVC Tray Cable|$3.11|ft.
-8536|#10-9 THHN-PVC Tray Cable|$4.07|ft.
-33373|#10-12 THHN-PVC Tray Cable|$5.23|ft.
-703|#12-3C THHN-PVC Tray Cable with Ground|$1.13|ft.
-721|#10-3C THHN-PVC Tray Cable with Ground|$1.66|ft.
-733|#8-3C THHN-PVC Tray Cable with Ground|$3.17|ft.
-736|#8-4C THHN-PVC Tray Cable with Ground|$3.17|ft.
-739|#6-3C THHN-PVC Tray Cable with Ground|$3.86|ft.
-742|#6-4C THHN-PVC Tray Cable with Ground|$4.79|ft.
-22966|#6-4C THHN-PVC Tray Cable with No Ground|$4.76|ft.
-6532|#4-3C THHN-PVC Tray Cable, No Ground|$4.72|ft.
-745|#4-3C THHN-PVC Tray Cable with Ground|$5.59|ft.
-748|#4-4C THHN-PVC Tray Cable with Ground|$7.25|ft.
-32648|#3-3C THHN-PVC Tray Cable with Ground|$7.42|ft.
-32909|#3-3C + #18-6C w/ #8 Ground Type TC/TC-ER-JP Generator Cable|$8.78|ft.
-32924|#4-3C + #18-6C w/ #8 Ground Type TC/TC-ER-JP Generator Cable|$7.80|ft.
-32927|#8-3C + #18-6C w/ #10 Ground Type TC/TC-ER-JP Generator Cable|$4.39|ft.
-33669|#3-3C + #18-6C w/ #8 Ground Type TC/TC-ER-JP Generator Cable, Orange Jacket|N/A|NA
-751|#2-3C THHN-PVC Tray Cable with Ground|$8.71|ft.
-754|#2-4C THHN-PVC Tray Cable with Ground|$11.24|ft.
-32654|#1-4C THHN-PVC Tray Cable with Ground|$14.18|ft.
-1216|#1-3C THHN-PVC Tray Cable with Ground|$10.44|ft.
-757|#1/0-3C THHN-PVC Tray Cable with Ground|$12.64|ft.
-760|#1/0-4C THHN-PVC Tray Cable with Ground|$17.29|ft.
-763|#2/0-3C THHN-PVC Tray Cable with Ground|$17.36|ft.
-766|#2/0-4C THHN-PVC Tray Cable with Ground|$19.55|ft.
-4921|#3/0-3C THHN-PVC Tray Cable with Ground|$19.48|ft.
-32660|#3/0-4C THHN-PVC Tray Cable with Ground|$24.21|ft.
-769|#4/0-3C THHN-PVC Tray Cable with Ground|$23.67|ft.
-772|#4/0-4C THHN-PVC Tray Cable with Ground|$29.93|ft.
-775|#250-3C THHN-PVC Tray Cable with Ground|$26.93|ft.
-778|#250-4C THHN-PVC Tray Cable with Ground|$35.71|ft.
-781|#350-3C THHN-PVC Tray Cable with Ground|$35.64|ft.
-784|#350-4C THHN-PVC Tray Cable with Ground|$49.11|ft.
-787|#500-3C THHN-PVC Tray Cable with Ground|$49.54|ft.
-790|#500-4C THHN-PVC Tray Cable with Ground|$62.51|ft.
-32339|#600-3C THHN-PVC Tray Cable with Ground|$72.00|NA
-32330|#600-4C THHN-PVC Tray Cable with Ground|N/A|NA
-32336|#750-3C THHN-PVC Tray Cable with Ground|N/A|NA
-32333|#750-4C THHN-PVC Tray Cable with Ground|N/A|NA
+group|data_id|product_name|unit_price|uom
+THHN-PVC Tray Cable|N/A|#18-2C Flat THHN-PVC Tray Cable|$0.22|ft
+THHN-PVC Tray Cable|N/A|#18-3C THHN-PVC Tray Cable|$0.31|ft
+THHN-PVC Tray Cable|N/A|#18-4C THHN-PVC Tray Cable|$0.39|ft
+THHN-PVC Tray Cable|N/A|#18-5C THHN-PVC Tray Cable|$0.47|ft
+THHN-PVC Tray Cable|N/A|#18-7C THHN-PVC Tray Cable|$0.87|ft
+THHN-PVC Tray Cable|N/A|#18-9C THHN-PVC Tray Cable|$1.09|ft
+THHN-PVC Tray Cable|N/A|#18-12C THHN-PVC Tray Cable|$1.54|ft
+THHN-PVC Tray Cable|N/A|#18-15C THHN-PVC Tray Cable|$1.86|ft
+THHN-PVC Tray Cable|N/A|#18-19C THHN-PVC Tray Cable|$2.50|ft
+THHN-PVC Tray Cable|N/A|#18-25C THHN-PVC Tray Cable|$3.19|ft
+THHN-PVC Tray Cable|N/A|#18-37C THHN-PVC Tray Cable|$3.54|ft
+THHN-PVC Tray Cable|N/A|#16-2C THHN-PVC Tray Cable|$0.29|ft
+THHN-PVC Tray Cable|N/A|#16-3C THHN-PVC Tray Cable|$0.41|ft
+THHN-PVC Tray Cable|N/A|#16-4C THHN-PVC Tray Cable|$0.57|ft
+THHN-PVC Tray Cable|N/A|#16-5C THHN-PVC Tray Cable|$0.65|ft
+THHN-PVC Tray Cable|N/A|#16-6C THHN-PVC Tray Cable|$0.77|ft
+THHN-PVC Tray Cable|N/A|#16-7C THHN-PVC Tray Cable|$0.87|ft
+THHN-PVC Tray Cable|N/A|#16-9C THHN-PVC Tray Cable|$1.14|ft
+THHN-PVC Tray Cable|N/A|#16-10C THHN-PVC Tray Cable|$1.36|ft
+THHN-PVC Tray Cable|N/A|#16-12C THHN-PVC Tray Cable|$1.58|ft
+THHN-PVC Tray Cable|N/A|#16-15C THHN-PVC Tray Cable|$2.10|ft
+THHN-PVC Tray Cable|N/A|#16-19C THHN-PVC Tray Cable|$2.73|ft
+THHN-PVC Tray Cable|N/A|#16-25C THHN-PVC Tray Cable|$4.47|ft
+THHN-PVC Tray Cable|N/A|#16-30C THHN-PVC Tray Cable|$5.55|ft
+THHN-PVC Tray Cable|N/A|#16-50C THHN-PVC Tray Cable|$7.22|ft
+THHN-PVC Tray Cable|N/A|#14-2C THHN-PVC Tray Cable|$0.37|ft
+THHN-PVC Tray Cable|N/A|#14-3C THHN-PVC Tray Cable|$0.57|ft
+THHN-PVC Tray Cable|N/A|#14-4C THHN-PVC Tray Cable|$0.73|ft
+THHN-PVC Tray Cable|N/A|#14-5C THHN-PVC Tray Cable|$0.95|ft
+THHN-PVC Tray Cable|N/A|#14-7C THHN-PVC Tray Cable|$1.28|ft
+THHN-PVC Tray Cable|N/A|#14-9C THHN-PVC Tray Cable|$1.65|ft
+THHN-PVC Tray Cable|N/A|#14-12C THHN-PVC Tray Cable|$2.23|ft
+THHN-PVC Tray Cable|N/A|#14-15C THHN-PVC Tray Cable|$2.93|ft
+THHN-PVC Tray Cable|N/A|#14-19C THHN-PVC Tray Cable|$3.49|ft
+THHN-PVC Tray Cable|N/A|#14-25C THHN-PVC Tray Cable|$5.04|ft
+THHN-PVC Tray Cable|N/A|#14-30C THHN-PVC Tray Cable|N/A|N/A
+THHN-PVC Tray Cable|N/A|#14-37C THHN-PVC Tray Cable|$8.15|ft
+THHN-PVC Tray Cable|N/A|#14-50C THHN-PVC Tray Cable|$14.60|ft
+THHN-PVC Tray Cable|N/A|#12-2C THHN-PVC Tray Cable|$0.57|ft
+THHN-PVC Tray Cable|N/A|#12-3C THHN-PVC Tray Cable|$0.87|ft
+THHN-PVC Tray Cable|N/A|#12-3C THHN-PVC Tray Cable (Black, White, Green)|$0.87|ft
+THHN-PVC Tray Cable|N/A|#12-4C THHN-PVC Tray Cable|$1.22|ft
+THHN-PVC Tray Cable|N/A|#12-5C THHN-PVC Tray Cable|$1.44|ft
+THHN-PVC Tray Cable|N/A|#12-7C THHN-PVC Tray Cable|$1.95|ft
+THHN-PVC Tray Cable|N/A|#12-9C THHN-PVC Tray Cable|$2.56|ft
+THHN-PVC Tray Cable|N/A|#12-12C THHN-PVC Tray Cable|$3.43|ft
+THHN-PVC Tray Cable|N/A|#12-15C THHN-PVC Tray Cable|$3.83|ft
+THHN-PVC Tray Cable|N/A|#12-19C THHN-PVC Tray Cable|$5.90|ft
+THHN-PVC Tray Cable|N/A|#10-2C Flat THHN-PVC Tray Cable|$0.89|ft
+THHN-PVC Tray Cable|N/A|#10-3C THHN-PVC Tray Cable|$1.33|ft
+THHN-PVC Tray Cable|N/A|#10-3C THHN-PVC Tray Cable (Black, White, Green)|$1.33|ft
+THHN-PVC Tray Cable|N/A|#10-4C THHN-PVC Tray Cable|$1.70|ft
+THHN-PVC Tray Cable|N/A|#10-4C THHN-PVC Tray Cable (Black, White, Red, Green)|$1.96|ft
+THHN-PVC Tray Cable|N/A|#10-5 THHN-PVC Tray Cable|$2.22|ft
+THHN-PVC Tray Cable|N/A|#10-7 THHN-PVC Tray Cable|$3.11|ft
+THHN-PVC Tray Cable|N/A|#10-9 THHN-PVC Tray Cable|$4.07|ft
+THHN-PVC Tray Cable|N/A|#10-12 THHN-PVC Tray Cable|$5.23|ft
+THHN-PVC Tray Cable|N/A|#12-3C THHN-PVC Tray Cable with Ground|$1.13|ft
+THHN-PVC Tray Cable|N/A|#10-3C THHN-PVC Tray Cable with Ground|$1.66|ft
+THHN-PVC Tray Cable|N/A|#8-3C THHN-PVC Tray Cable with Ground|$3.17|ft
+THHN-PVC Tray Cable|N/A|#8-4C THHN-PVC Tray Cable with Ground|$3.17|ft
+THHN-PVC Tray Cable|N/A|#6-3C THHN-PVC Tray Cable with Ground|$3.86|ft
+THHN-PVC Tray Cable|N/A|#6-4C THHN-PVC Tray Cable with Ground|$4.79|ft
+THHN-PVC Tray Cable|N/A|#6-4C THHN-PVC Tray Cable with No Ground|$4.76|ft
+THHN-PVC Tray Cable|N/A|#4-3C THHN-PVC Tray Cable, No Ground|$4.72|ft
+THHN-PVC Tray Cable|N/A|#4-3C THHN-PVC Tray Cable with Ground|$5.59|ft
+THHN-PVC Tray Cable|N/A|#4-4C THHN-PVC Tray Cable with Ground|$7.25|ft
+THHN-PVC Tray Cable|N/A|#3-3C THHN-PVC Tray Cable with Ground|$7.42|ft
+THHN-PVC Tray Cable|N/A|#3-3C + #18-6C w/ #8 Ground Type TC/TC-ER-JP Generator Cable|$8.78|ft
+THHN-PVC Tray Cable|N/A|#4-3C + #18-6C w/ #8 Ground Type TC/TC-ER-JP Generator Cable|$7.80|ft
+THHN-PVC Tray Cable|N/A|#8-3C + #18-6C w/ #10 Ground Type TC/TC-ER-JP Generator Cable|$4.39|ft
+THHN-PVC Tray Cable|N/A|#3-3C + #18-6C w/ #8 Ground Type TC/TC-ER-JP Generator Cable, Orange Jacket|N/A|N/A
+THHN-PVC Tray Cable|N/A|#2-3C THHN-PVC Tray Cable with Ground|$8.71|ft
+THHN-PVC Tray Cable|N/A|#2-4C THHN-PVC Tray Cable with Ground|$11.24|ft
+THHN-PVC Tray Cable|N/A|#1-4C THHN-PVC Tray Cable with Ground|$14.18|ft
+THHN-PVC Tray Cable|N/A|#1-3C THHN-PVC Tray Cable with Ground|$10.44|ft
+THHN-PVC Tray Cable|N/A|#1/0-3C THHN-PVC Tray Cable with Ground|$12.64|ft
+THHN-PVC Tray Cable|N/A|#1/0-4C THHN-PVC Tray Cable with Ground|$17.29|ft
+THHN-PVC Tray Cable|N/A|#2/0-3C THHN-PVC Tray Cable with Ground|$17.36|ft
+THHN-PVC Tray Cable|N/A|#2/0-4C THHN-PVC Tray Cable with Ground|$19.55|ft
+THHN-PVC Tray Cable|N/A|#3/0-3C THHN-PVC Tray Cable with Ground|$19.48|ft
+THHN-PVC Tray Cable|N/A|#3/0-4C THHN-PVC Tray Cable with Ground|$24.21|ft
+THHN-PVC Tray Cable|N/A|#4/0-3C THHN-PVC Tray Cable with Ground|$23.67|ft
+THHN-PVC Tray Cable|N/A|#4/0-4C THHN-PVC Tray Cable with Ground|$29.93|ft
+THHN-PVC Tray Cable|N/A|#250-3C THHN-PVC Tray Cable with Ground|$26.93|ft
+THHN-PVC Tray Cable|N/A|#250-4C THHN-PVC Tray Cable with Ground|$35.71|ft
+THHN-PVC Tray Cable|N/A|#350-3C THHN-PVC Tray Cable with Ground|$35.64|ft
+THHN-PVC Tray Cable|N/A|#350-4C THHN-PVC Tray Cable with Ground|$49.11|ft
+THHN-PVC Tray Cable|N/A|#500-3C THHN-PVC Tray Cable with Ground|$49.54|ft
+THHN-PVC Tray Cable|N/A|#500-4C THHN-PVC Tray Cable with Ground|$62.51|ft
+THHN-PVC Tray Cable|N/A|#600-3C THHN-PVC Tray Cable with Ground|$72.00|N/A
+THHN-PVC Tray Cable|N/A|#600-4C THHN-PVC Tray Cable with Ground|N/A|N/A
+THHN-PVC Tray Cable|N/A|#750-3C THHN-PVC Tray Cable with Ground|N/A|N/A
+THHN-PVC Tray Cable|N/A|#750-4C THHN-PVC Tray Cable with Ground|N/A|N/A
+THHN-PVC Tray Cable with Ground|N/A|#12-3C THHN-PVC Tray Cable with Ground|$1.13|ft
+THHN-PVC Tray Cable with Ground|N/A|#10-3C THHN-PVC Tray Cable with Ground|$1.66|ft
+THHN-PVC Tray Cable with Ground|N/A|#8-3C THHN-PVC Tray Cable with Ground|$3.17|ft
+THHN-PVC Tray Cable with Ground|N/A|#8-4C THHN-PVC Tray Cable with Ground|$3.17|ft
+THHN-PVC Tray Cable with Ground|N/A|#6-3C THHN-PVC Tray Cable with Ground|$3.86|ft
+THHN-PVC Tray Cable with Ground|N/A|#6-4C THHN-PVC Tray Cable with Ground|$4.79|ft
+THHN-PVC Tray Cable with Ground|N/A|#6-4C THHN-PVC Tray Cable with No Ground|$4.76|ft
+THHN-PVC Tray Cable with Ground|N/A|#4-3C THHN-PVC Tray Cable, No Ground|$4.72|ft
+THHN-PVC Tray Cable with Ground|N/A|#4-3C THHN-PVC Tray Cable with Ground|$5.59|ft
+THHN-PVC Tray Cable with Ground|N/A|#4-4C THHN-PVC Tray Cable with Ground|$7.25|ft
+THHN-PVC Tray Cable with Ground|N/A|#3-3C THHN-PVC Tray Cable with Ground|$7.42|ft
+THHN-PVC Tray Cable with Ground|N/A|#3-3C + #18-6C w/ #8 Ground Type TC/TC-ER-JP Generator Cable|$8.78|ft
+THHN-PVC Tray Cable with Ground|N/A|#4-3C + #18-6C w/ #8 Ground Type TC/TC-ER-JP Generator Cable|$7.80|ft
+THHN-PVC Tray Cable with Ground|N/A|#8-3C + #18-6C w/ #10 Ground Type TC/TC-ER-JP Generator Cable|$4.39|ft
+THHN-PVC Tray Cable with Ground|N/A|#3-3C + #18-6C w/ #8 Ground Type TC/TC-ER-JP Generator Cable, Orange Jacket|N/A|N/A
+THHN-PVC Tray Cable with Ground|N/A|#2-3C THHN-PVC Tray Cable with Ground|$8.71|ft
+THHN-PVC Tray Cable with Ground|N/A|#2-4C THHN-PVC Tray Cable with Ground|$11.24|ft
+THHN-PVC Tray Cable with Ground|N/A|#1-4C THHN-PVC Tray Cable with Ground|$14.18|ft
+THHN-PVC Tray Cable with Ground|N/A|#1-3C THHN-PVC Tray Cable with Ground|$10.44|ft
+THHN-PVC Tray Cable with Ground|N/A|#1/0-3C THHN-PVC Tray Cable with Ground|$12.64|ft
+THHN-PVC Tray Cable with Ground|N/A|#1/0-4C THHN-PVC Tray Cable with Ground|$17.29|ft
+THHN-PVC Tray Cable with Ground|N/A|#2/0-3C THHN-PVC Tray Cable with Ground|$17.36|ft
+THHN-PVC Tray Cable with Ground|N/A|#2/0-4C THHN-PVC Tray Cable with Ground|$19.55|ft
+THHN-PVC Tray Cable with Ground|N/A|#3/0-3C THHN-PVC Tray Cable with Ground|$19.48|ft
+THHN-PVC Tray Cable with Ground|N/A|#3/0-4C THHN-PVC Tray Cable with Ground|$24.21|ft
+THHN-PVC Tray Cable with Ground|N/A|#4/0-3C THHN-PVC Tray Cable with Ground|$23.67|ft
+THHN-PVC Tray Cable with Ground|N/A|#4/0-4C THHN-PVC Tray Cable with Ground|$29.93|ft
+THHN-PVC Tray Cable with Ground|N/A|#250-3C THHN-PVC Tray Cable with Ground|$26.93|ft
+THHN-PVC Tray Cable with Ground|N/A|#250-4C THHN-PVC Tray Cable with Ground|$35.71|ft
+THHN-PVC Tray Cable with Ground|N/A|#350-3C THHN-PVC Tray Cable with Ground|$35.64|ft
+THHN-PVC Tray Cable with Ground|N/A|#350-4C THHN-PVC Tray Cable with Ground|$49.11|ft
+THHN-PVC Tray Cable with Ground|N/A|#500-3C THHN-PVC Tray Cable with Ground|$49.54|ft
+THHN-PVC Tray Cable with Ground|N/A|#500-4C THHN-PVC Tray Cable with Ground|$62.51|ft
+THHN-PVC Tray Cable with Ground|N/A|#600-3C THHN-PVC Tray Cable with Ground|$72.00|N/A
+THHN-PVC Tray Cable with Ground|N/A|#600-4C THHN-PVC Tray Cable with Ground|N/A|N/A
+THHN-PVC Tray Cable with Ground|N/A|#750-3C THHN-PVC Tray Cable with Ground|N/A|N/A
+THHN-PVC Tray Cable with Ground|N/A|#750-4C THHN-PVC Tray Cable with Ground|N/A|N/A

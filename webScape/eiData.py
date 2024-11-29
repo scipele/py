@@ -18,42 +18,52 @@ class ProductScraper:
                 # Parse the HTML page
                 soup = BeautifulSoup(response.text, 'html.parser')
 
-                # Find all product containers (assuming each product is in an <li> tag)
-                product_containers = soup.find_all('div', class_='product-item-info')
+                # Find all child-category divs (group names)
+                group_elements = soup.find_all('div', class_='child-category')
 
-                # List to store all products
-                products = []
+                # List to store the group names and their corresponding products
+                groups = {}
 
-                # Loop through all the product containers and extract details
-                for container in product_containers:
-                    # Extract the data-id (used as a key for the database)
-                    data_id = container.get('data-id', 'N/A')
+                for group_element in group_elements:
+                    # Get the group name from the span within the div
+                    group_name = group_element.find('span').text.strip()
 
-                    # Extract product name
-                    product_name_tag = container.find('a')
-                    product_name = product_name_tag.text.strip() if product_name_tag else "N/A"
-                    
-                    # Extract price
-                    price_tag = container.find('span', class_='price')
-                    unit_price = price_tag.text.strip() if price_tag else "N/A"
+                    # Find the next product containers after the group name
+                    product_containers = group_element.find_all_next('li', class_='item product product-item')
 
-                    # Extract the unit of measure (UOM) like '/ft'
-                    uom_tag = container.find('span', class_='price-unit')
-                    uom = uom_tag.text.strip().replace('/', '').replace('.', '') if uom_tag else "N/A"
-                    uom = uom_tag.text.strip() if uom_tag else "N/A"
+                    # List to store all products under this group
+                    products = []
 
-                    # Remove the '/' from the UOM
-                    uom = uom.replace('/', '').strip()                    
+                    for container in product_containers:
+                        # Extract the data-id (used as a key for the database)
+                        data_id = container.get('data-id', 'N/A')
 
-                    # Append the product details to the list
-                    products.append({
-                        'data_id': data_id,
-                        'product_name': product_name,
-                        'unit_price': unit_price,
-                        'uom': uom
-                    })
+                        # Extract product name
+                        product_name_tag = container.find('a')
+                        product_name = product_name_tag.text.strip() if product_name_tag else "N/A"
+                        
+                        # Extract price
+                        price_tag = container.find('span', class_='price')
+                        unit_price = price_tag.text.strip() if price_tag else "N/A"
 
-                return products
+                        # Extract the unit of measure (UOM) like '/ft'
+                        uom_tag = container.find('span', class_='price-unit')
+                        uom = uom_tag.text.strip().replace('/', '').replace('.', '') if uom_tag else "N/A"
+
+                        # Append the product details to the list
+                        products.append({
+                            'group': group_name,  # Add the group field
+                            'data_id': data_id,
+                            'product_name': product_name,
+                            'unit_price': unit_price,
+                            'uom': uom
+                        })
+
+                    # Store the group and its products in the groups dictionary
+                    groups[group_name] = products
+
+                return groups
+
             else:
                 print(f"Failed to fetch the webpage: {response.status_code}")
                 return []
@@ -74,12 +84,14 @@ class ProductScraper:
             url = f"{self.base_url}{path}"
             product_details = self.get_product_details(url)
             if product_details:
-                all_products.extend(product_details)
+                # Flatten the groups into a single list of products
+                for group, products in product_details.items():
+                    all_products.extend(products)
 
         return all_products
 
     def write_to_csv(self, products, filename):
-        fieldnames = ['data_id', 'product_name', 'unit_price', 'uom']
+        fieldnames = ['group', 'data_id', 'product_name', 'unit_price', 'uom']
 
         with open(filename, mode='w', newline='', encoding='utf-8') as file:
             writer = csv.DictWriter(file, fieldnames=fieldnames, delimiter='|')
@@ -113,6 +125,7 @@ def main():
         scraper.write_to_csv(products, 'products.csv')
     else:
         print("No products found.")
+
 
 # Entry point of the program
 if __name__ == "__main__":
