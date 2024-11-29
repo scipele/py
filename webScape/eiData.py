@@ -4,42 +4,52 @@ from bs4 import BeautifulSoup
 
 # Function to scrape the product information
 def get_product_details(url):
-    # Make the HTTP request to fetch the page content
-    response = requests.get(url)
-    
-    if response.status_code == 200:
-        # Parse the HTML page
-        soup = BeautifulSoup(response.text, 'html.parser')
-        
-        # Find all product containers
-        product_containers = soup.find_all('li', class_='item product product-item')
-        
-        # List to store the product details
-        products = []
+    try:
+        # Make the HTTP request to fetch the page content with a timeout
+        response = requests.get(url, timeout=10)  # Timeout set to 10 seconds
+        response.raise_for_status()  # Raises HTTPError for bad responses (4xx or 5xx)
 
-        if product_containers:
-            # Loop through each product container and extract details
-            for container in product_containers:
-                # Get the product name and URL
-                product_name_tag = container.find('a')
-                product_name = product_name_tag.text.strip() if product_name_tag else "N/A"
-                
-                # Get the price
-                price_tag = container.find('span', class_='price')
-                unit_price = price_tag.text.strip() if price_tag else "N/A"
+        if response.status_code == 200:
+            # Parse the HTML page
+            soup = BeautifulSoup(response.text, 'html.parser')
+            
+            # Find all product containers
+            product_containers = soup.find_all('li', class_='item product product-item')
+            
+            # List to store the product details
+            products = []
 
-                # Append the product details to the list
-                products.append({
-                    'product_name': product_name,
-                    'unit_price': unit_price
-                })
-            return products
+            if product_containers:
+                # Loop through each product container and extract details
+                for container in product_containers:
+                    # Get the product name and URL
+                    product_name_tag = container.find('a')
+                    product_name = product_name_tag.text.strip() if product_name_tag else "N/A"
+                    
+                    # Get the price
+                    price_tag = container.find('span', class_='price')
+                    unit_price = price_tag.text.strip() if price_tag else "N/A"
+
+                    # Append the product details to the list
+                    products.append({
+                        'product_name': product_name,
+                        'unit_price': unit_price
+                    })
+                return products
+            else:
+                print("No product containers found.")
+                return []
+
         else:
-            print("No product containers found.")
+            print(f"Failed to fetch the webpage: {response.status_code}")
             return []
 
-    else:
-        print(f"Failed to fetch the webpage: {response.status_code}")
+    except requests.exceptions.Timeout:
+        print(f"Request timed out while trying to fetch the URL: {url}")
+        return []
+    except requests.exceptions.RequestException as e:
+        # Catch all other request-related errors (e.g., network issues, invalid URL)
+        print(f"An error occurred while fetching the URL: {url}\nError: {str(e)}")
         return []
 
 # Function to write data to a CSV file
