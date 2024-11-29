@@ -37,13 +37,13 @@ def clear_and_display(flashcards, window):
 
 def display_flashcards(flashcards):
     window = tk.Tk()
-    window.title("Clue")
+    window.title("Bible Verses")
 
     # Set the minimum size (width, height)
-    window.wm_minsize(800, 600)  # Minimum width = 300, Minimum height = 200
+    window.wm_minsize(800, 600)  
 
     # Optionally, set the initial size of the window
-    window.geometry("800x600")  # Initial width = 500, Initial height = 400
+    window.geometry("800x600") 
 
     if flashcards:
         flashcard = random.choice(flashcards)
