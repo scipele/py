@@ -57,7 +57,8 @@ def getWebData(url):
                             
                 #3. Get the Product Name
                 product_name = product.find('div', class_='product-name').text.strip()  # Extract product name
-                
+                product_name = product_name.replace("Product Name: ", "")  # Remove "Product Name: "
+
                 #4. Get the Product Unit Price in two steps
                 price_wrapper = product.find('span', class_='price-wrapper')
                 price_unit = price_wrapper['data-price-amount'] if price_wrapper else "0"
