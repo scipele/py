@@ -1,0 +1,13 @@
+def example_one_for_each(fruits):
+    for fruit in fruits:
+        print(fruit)
+
+def example_two_loop_with_index(fruits):
+    for index, fruit in enumerate(fruits):
+        print(index, fruit)
+
+if __name__ == "__main__":
+    fruits = ['apple', 'orange', 'pear', 'bananna']
+
+    example_one_for_each(fruits)
+    example_two_loop_with_index(fruits)    
