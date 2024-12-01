@@ -1,3 +1,4 @@
+# sample loops
 def ex_for_each(on
     for fruit in fruits:
         print(fruit)
