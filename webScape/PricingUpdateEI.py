@@ -11,6 +11,8 @@
 import requests
 import pandas as pd
 from bs4 import BeautifulSoup
+import time
+
 
 def getWebData(url, all_product_data):
     try:
@@ -80,6 +82,9 @@ def getWebData(url, all_product_data):
 
 if __name__ == "__main__":
     # List of URLs to scrape
+    
+    start_time = time.perf_counter()
+
     urls = [
         "https://www.wireandcableyourway.com/tray-cable-thhn-pvc",
         "https://www.wireandcableyourway.com/thhn-thwn"
@@ -95,8 +100,14 @@ if __name__ == "__main__":
 
     # Create a DataFrame from the aggregated product data
     headers = ['group_name', 'data_id', 'product_Name', 'price_unit', 'uom']
+
     df = pd.DataFrame(all_product_data, columns=headers)
 
     # Display DataFrame and save it as a CSV file
     print(df)
     df.to_csv("c:/dev/py/webscape/product_data.csv", index=False, sep='|')
+
+    end_time = time.perf_counter()
+
+    duration = end_time - start_time
+    print("Duration: ", duration)
