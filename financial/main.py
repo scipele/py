@@ -67,11 +67,11 @@ def gen_report(inputs, report_filename="/home/ts/dev/py/financial/results.md"):
     Generates a deterministic financial report, completely overwriting old runs.
     Both tables are wrapped in markdown code blocks to preserve crisp visual spacing.
     """
-    with open(report_filename, 'w') as report_file:
+    with open(report_filename, 'w') as f:
         
         # --- SECTION 1: WRITE HEADERS & INPUTS ---
-        report_file.write("# Retirement Simulation Analysis Report\n\n")
-        report_file.write("--- LOADED INPUTS FROM JSON ---\n")
+        f.write("# Retirement Simulation Analysis Report\n\n")
+        f.write("--- LOADED INPUTS FROM JSON ---\n")
         
         # Format the parameters into clean comma-separated strings
         formatted_inputs = [
@@ -79,15 +79,14 @@ def gen_report(inputs, report_filename="/home/ts/dev/py/financial/results.md"):
             for key, value in inputs.items()
         ]
         
-        # FIX: Wrap the top table in a code block so Markdown Preview preserves columns
-        report_file.write("```text\n")
-        report_file.write(tabulate(
+        f.write("```text\n")
+        f.write(tabulate(
             formatted_inputs, 
             headers=["Parameter", "Value"], 
             tablefmt="simple", 
             disable_numparse=True
         ))
-        report_file.write("\n```\n\n")
+        f.write("\n```\n\n")
         
         # --- SECTION 2: CALCULATE PROJECTIONS ---
         planner = RetirementPlanner(inputs)
@@ -103,17 +102,17 @@ def gen_report(inputs, report_filename="/home/ts/dev/py/financial/results.md"):
             formatted_rows = formatted_rows + [formatted_row]
             
         # --- SECTION 3: WRITE OUT CLEAN TABLE ENCLOSED IN CODE BLOCKS ---
-        report_file.write("--- BASE PROJECTION (Deterministic) ---\n")
-        report_file.write("```text\n")
+        f.write("--- BASE PROJECTION (Deterministic) ---\n")
+        f.write("```text\n")
         
-        report_file.write(tabulate(
+        f.write(tabulate(
             formatted_rows, 
             headers=headers, 
             tablefmt='simple', 
             showindex=False, 
             disable_numparse=True
         ))
-        report_file.write("\n```\n")
+        f.write("\n```\n")
 
     print(f"Success! Overwrote and updated report at: {report_filename}")
 
@@ -123,7 +122,7 @@ if __name__ == "__main__":
     inputs = load_inputs_from_json()
     gen_report(inputs)
     
-    # 2. Run stochastic data loops
+    # 2. Run stochastic data loops. What does this mean? It means we are running a Monte Carlo simulation to generate a distribution of possible outcomes based on random variations in investment returns. This helps us understand the range of potential future financial scenarios and assess risk.
     final_net_worths = run_monte_carlo(inputs)
     
     # 3. Print output metrics
@@ -134,3 +133,4 @@ if __name__ == "__main__":
     
     # 4. Display distribution chart
     plot_results(final_net_worths)
+
