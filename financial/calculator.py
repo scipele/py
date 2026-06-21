@@ -45,33 +45,38 @@ class RetirementPlanner:
             else:
                 savings += self.inp['annual_contribution']
 
-            # Add home downsizing cash infusion if applicable
+            # 3. Add home downsizing cash infusion if applicable
             if current_year == self.inp.get('home_downsizing_year', 0):
                 savings += self.inp.get('home_downsizing_estim_cash_infusion', 0)
 
-            # 3. Apply Investment Returns
+            # 4. Apply Childhood Expenses (only for duration input)
+            if year_idx <= self.inp.get('expected_duration_of_child_expenses', 0):
+                savings -= self.inp.get('expected_child_expenses', 0)
+
+            # 5. Apply Investment Returns
             if age > self.inp['current_age']:
                 rate = (simulation_returns[year_idx] 
                         if simulation_returns is not None 
                         else self.inp['expected_annual_return_rate'])
                 savings *= (1 + rate)
 
-            # 4. Social Security (only after eligibility age)
+            # 6. Social Security (only after eligibility age)
             ss_income = 0
             if age >= self.inp['expected_age_of_social_security_benefits']:
                 ss_income = self.inp['expected_retirement_income_social_security']
 
-            # 5. Expenses (inflation adjusted) and SS
+            # 7. Expenses (inflation adjusted) and SS
             expenses = self.get_inflation_adjusted_expense(age)
             savings -= expenses
             savings += ss_income
 
-            # Store detailed calculation data for this year
+            # 8. Store detailed calculation data for this year
             self.cd.append({
                 "Age": age,
                 "Year": current_year,
                 "Equity_Payout": equity_payout,
                 "Home_Downsizing_Cash_Infusion": self.inp.get('home_downsizing_estim_cash_infusion', 0) if current_year == self.inp.get('home_downsizing_year', 0) else 0,
+                "Child_Expenses": self.inp.get('expected_child_expenses', 0) if year_idx <= self.inp.get('expected_duration_of_child_expenses', 0) else 0,
                 "Contribution_Added": equity_payout if equity_payout > 0 else self.inp['annual_contribution'],
                 "Return_Rate_Applied": rate if age > self.inp['current_age'] else 0,
                 "Expenses": expenses,

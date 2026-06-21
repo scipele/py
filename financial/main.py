@@ -73,12 +73,12 @@ def gen_report(inputs, report_filename="/home/ts/dev/py/financial/results.md"):
         f.write("# Retirement Simulation Analysis Report\n\n")
         f.write("--- LOADED INPUTS FROM JSON ---\n")
         
-        # Format the parameters into clean comma-separated strings
+        # Format the parameters into clean comma-separated strings without losing decimals
         formatted_inputs = [
-            (key, f"{int(value):,d}" if isinstance(value, (int, float)) else str(value)) 
+            (key, f"{value:,}" if isinstance(value, (int, float)) else str(value))
             for key, value in inputs.items()
         ]
-        
+
         f.write("```text\n")
         f.write(tabulate(
             formatted_inputs, 
