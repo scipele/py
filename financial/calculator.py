@@ -63,7 +63,9 @@ class RetirementPlanner:
             # 6. Social Security (only after eligibility age)
             ss_income = 0
             if age >= self.inp['expected_age_of_social_security_benefits']:
-                ss_income = self.inp['expected_retirement_income_social_security']
+                # can you increase SS income with inflation?
+                years_since_eligibility = age - self.inp['expected_age_of_social_security_benefits']
+                ss_income = self.inp['expected_initial_income_social_security'] * (1 + self.inp['expected_annual_inflation_rate']) ** years_since_eligibility
 
             # 7. Expenses (inflation adjusted) and SS
             expenses = self.get_inflation_adjusted_expense(age)
