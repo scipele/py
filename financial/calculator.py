@@ -23,25 +23,18 @@ class RetirementPlanner:
         """
         current_year = 2026
         age = self.inp['current_age']
-
         savings = self.inp['current_savings_other'] + self.inp['current_savings_401k']
+        equity_payout_per_year = (self.inp['company_equity_value'] / self.inp['company_equity_payback_period_years'])
         
-        self.cd = []          # ← Your requested calc data structure
+        self.cd = []
         year_idx = 0
 
         while age <= self.inp['expected_life_expectancy']:
-            # 1. Company Equity Payout (only during payback period)
-            equity_payout = 0
-            if current_year >= self.inp['company_equity_payout_initial_year']:
-                years_since_start = current_year - self.inp['company_equity_payout_initial_year']
-                if years_since_start < self.inp['company_equity_payback_period_years']:
-                    equity_payout = (self.inp['company_equity_value'] 
-                                     / self.inp['company_equity_payback_period_years'])
+            # 1. Equity Payout Dispersion
 
-            # 2. Add Contributions or Equity Payout
             if (current_year >= self.inp['company_equity_payout_initial_year'] 
                 and year_idx < self.inp['company_equity_payback_period_years']):
-                savings += equity_payout
+                savings += equity_payout_per_year
             else:
                 savings += self.inp['annual_contribution']
 
@@ -76,14 +69,12 @@ class RetirementPlanner:
             self.cd.append({
                 "Age": age,
                 "Year": current_year,
-                "Equity_Payout": equity_payout,
-                "Home_Downsizing_Cash_Infusion": self.inp.get('home_downsizing_estim_cash_infusion', 0) if current_year == self.inp.get('home_downsizing_year', 0) else 0,
-                "Child_Expenses": self.inp.get('expected_child_expenses', 0) if year_idx <= self.inp.get('expected_duration_of_child_expenses', 0) else 0,
-                "Contribution_Added": equity_payout if equity_payout > 0 else self.inp['annual_contribution'],
-                "Return_Rate_Applied": rate if age > self.inp['current_age'] else 0,
+                "Home_Downsz": self.inp.get('home_downsizing_estim_cash_infusion', 0) if current_year == self.inp.get('home_downsizing_year', 0) else 0,
+                "Child_Exp": self.inp.get('expected_child_expenses', 0) if year_idx <= self.inp.get('expected_duration_of_child_expenses', 0) else 0,
+                "Equity_Pmt": equity_payout_per_year if (current_year >= self.inp['company_equity_payout_initial_year'] and year_idx < self.inp['company_equity_payback_period_years']) else self.inp['annual_contribution'],
                 "Expenses": expenses,
                 "SS_Income": ss_income,
-                "Net_Value_End_OfYear": savings
+                "Net_Val_EOY": savings
             })
 
             age += 1

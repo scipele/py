@@ -40,7 +40,7 @@ def run_monte_carlo(user_inputs, num_simulations=5000):
         )
         
         df = planner.run_projection(simulation_returns=random_returns)
-        final_balances.append(df.iloc[-1]['Net_Value_End_OfYear'])
+        final_balances.append(df.iloc[-1]['Net_Val_EOY'])
         
     return np.array(final_balances)
 
@@ -118,7 +118,7 @@ def gen_report(inputs, report_filename="/home/ts/dev/py/financial/results.md"):
 
 
 if __name__ == "__main__":
-    # Generate report by calling gen_report() with inputs loaded from JSON
+    # 1. Generate report by calling gen_report() with inputs loaded from JSON
     inputs = load_inputs_from_json()
     gen_report(inputs)
     
