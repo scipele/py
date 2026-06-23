@@ -1,7 +1,9 @@
 # Check FI Count!!!!
 # Boldin
 # Add taxes in 401k
+# Bill Bingam
 # Add Spouse's Social Security Income
+# Incorporate Varying Std Deviation in Agressive (15.25%) and Moderate (10.25%) and Conservative (5.25%) portfolios
 
 # main.py
 import json
