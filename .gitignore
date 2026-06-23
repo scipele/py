@@ -1,8 +1,0 @@
-financial/model_data.json
-financial/results.md
-
-# Byte-compiled / optimized / DLL files
-__pycache__/
-*.pyc
-*.pyo
-*.pyd
