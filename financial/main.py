@@ -1,3 +1,8 @@
+# Check FI Count!!!!
+# Boldin
+# Add taxes in 401k
+# Add Spouse's Social Security Income
+
 # main.py
 import json
 import os
@@ -6,19 +11,15 @@ import matplotlib.pyplot as plt
 from calculator import RetirementPlanner
 from tabulate import tabulate
 
-
-def load_inputs_from_json(filename="/home/ts/dev/py/financial/model_data.json"):
+# /home/dev/py/financial/model_data.json
+def load_inputs_from_json(filename="/home/dev/py/financial/model_data.json"):
     """Loads configuration data directly from a JSON file."""
     if not os.path.exists(filename):
         raise FileNotFoundError(f"Could not find {filename} in the current directory.")
         
     with open(filename, 'r') as file:
         data = json.load(file)
-    
-    # Inject historical asset volatility metric if missing from JSON
-    if 'expected_return_std_dev' not in data:
-        data['expected_return_std_dev'] = 12.0
-        
+       
     return data
 
 
@@ -62,7 +63,7 @@ def plot_results(balances):
     plt.show()
 
 
-def gen_report(inputs, report_filename="/home/ts/dev/py/financial/results.md"):
+def gen_report(inputs, report_filename="/home/dev/py/financial/results.md"):
     """
     Generates a deterministic financial report, completely overwriting old runs.
     Both tables are wrapped in markdown code blocks to preserve crisp visual spacing.
