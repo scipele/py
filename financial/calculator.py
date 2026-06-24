@@ -29,6 +29,10 @@ class RetirementPlanner:
         self.cd = []
         year_idx = 0
 
+        tax_rate = self.inp.get('estimated_retirement_tax_rate', 0.0)
+        # Use a retirement age if provided, otherwise apply from current age (minimal assumption)
+        retirement_age = self.inp.get('expected_retirement_age', self.inp['current_age'])
+
         while age <= self.inp['expected_life_expectancy']:
             # 1. Equity Payout Dispersion
 
@@ -60,9 +64,16 @@ class RetirementPlanner:
                 years_since_eligibility = age - self.inp['expected_age_of_social_security_benefits']
                 ss_income = self.inp['expected_initial_income_social_security'] * (1 + self.inp['expected_annual_inflation_rate']) ** years_since_eligibility
 
-            # 7. Expenses (inflation adjusted) and SS
+            # 7. Expenses (inflation adjusted) + tax adjustment on 401k withdrawals
             expenses = self.get_inflation_adjusted_expense(age)
-            savings -= expenses
+            
+            # Minimal tax adjustment: gross up the withdrawal if in retirement
+            if age >= retirement_age and tax_rate > 0:
+                gross_withdrawal = expenses / (1 - tax_rate)
+            else:
+                gross_withdrawal = expenses
+                
+            savings -= gross_withdrawal
             savings += ss_income
 
             # 8. Store detailed calculation data for this year
@@ -73,6 +84,7 @@ class RetirementPlanner:
                 "Child_Exp": self.inp.get('expected_child_expenses', 0) if year_idx <= self.inp.get('expected_duration_of_child_expenses', 0) else 0,
                 "Equity_Pmt": equity_payout_per_year if (current_year >= self.inp['company_equity_payout_initial_year'] and year_idx < self.inp['company_equity_payback_period_years']) else self.inp['annual_contribution'],
                 "Expenses": expenses,
+                "Gross_Withdrawal": gross_withdrawal,   # new for visibility
                 "SS_Income": ss_income,
                 "Net_Val_EOY": savings
             })
