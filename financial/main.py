@@ -1,11 +1,12 @@
-# Check FI Count!!!!
+# Check FI Calc!!!!
 # Boldin
 # Add taxes in 401k
+# Thad would consider a 90 (s&p-voo)/ 10 (bnd) or possibly and 80/20 split between stocks and bonds for a more conservative approach.
 # Bill Bingam
 # Add Spouse's Social Security Income
 # Incorporate Varying Std Deviation in Agressive (15.25%) and Moderate (10.25%) and Conservative (5.25%) portfolios
+# Put both spouses names as beneficiaries on all accounts
 
-# main.py
 import json
 import os
 import numpy as np
@@ -13,7 +14,7 @@ import matplotlib.pyplot as plt
 from calculator import RetirementPlanner
 from tabulate import tabulate
 
-# /home/dev/py/financial/model_data.json
+
 def load_inputs_from_json(filename="/home/dev/py/financial/model_data.json"):
     """Loads configuration data directly from a JSON file."""
     if not os.path.exists(filename):
@@ -41,10 +42,8 @@ def run_monte_carlo(user_inputs, num_simulations=5000):
             scale=user_inputs['expected_return_std_dev'], 
             size=years_to_simulate
         )
-        
         df = planner.run_projection(simulation_returns=random_returns)
         final_balances.append(df.iloc[-1]['Net_Val_EOY'])
-        
     return np.array(final_balances)
 
 
@@ -136,4 +135,3 @@ if __name__ == "__main__":
     
     # 4. Display distribution chart
     plot_results(final_net_worths)
-
