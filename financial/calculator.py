@@ -28,6 +28,7 @@ class RetirementPlanner:
         
         self.cd = []
         year_idx = 0
+        investment_return = 0
 
         tax_rate = self.inp.get('estimated_retirement_tax_rate', 0.0)
         # Use a retirement age if provided, otherwise apply from current age (minimal assumption)
@@ -50,11 +51,12 @@ class RetirementPlanner:
             if year_idx <= self.inp.get('expected_duration_of_child_expenses', 0):
                 savings -= self.inp.get('expected_child_expenses', 0)
 
-            # 5. Apply Investment Returns
+            # 5. Apply Investment Returns.  should i separate 401k from other investments?  for now, just lump them together.  if you want to separate, you can add a new input for expected_annual_return_rate_401k and apply it to the 401k portion of savings.  also should i separate investments based on differnt types of investments so that my monte carle can simulate different returns and standard deviations for each type of investment?  for now, just lump them together.  if you want to separate, you can add a new input for expected_annual_return_rate_investments and apply it to the non-401k portion of savings.  also should i separate investments based on differnt types of investments so that my monte carle can simulate different returns and standard deviations for each type of investment?  for now, just lump them together.  if you want to separate, you can add a new input for expected_annual_return_rate_investments and apply it to the non-401k portion of savings.
             if age > self.inp['current_age']:
                 rate = (simulation_returns[year_idx] 
                         if simulation_returns is not None 
                         else self.inp['expected_annual_return_rate'])
+                investment_return = savings * rate
                 savings *= (1 + rate)
 
             # 6. Social Security (only after eligibility age)
@@ -84,8 +86,9 @@ class RetirementPlanner:
                 "Child_Exp": self.inp.get('expected_child_expenses', 0) if year_idx <= self.inp.get('expected_duration_of_child_expenses', 0) else 0,
                 "Equity_Pmt": equity_payout_per_year if (current_year >= self.inp['company_equity_payout_initial_year'] and year_idx < self.inp['company_equity_payback_period_years']) else self.inp['annual_contribution'],
                 "Expenses": expenses,
-                "Gross_Withdrawal": gross_withdrawal,   # new for visibility
+                "Gross_Withdrawal": gross_withdrawal,
                 "SS_Income": ss_income,
+                "Investment_Return": investment_return, 
                 "Net_Val_EOY": savings
             })
 
