@@ -2,3 +2,7 @@ financial/model_data.json
 financial/__pycache__/calculator.cpython-314.pyc
 financial/results.md
 /home/dev/py/.vscode/
+*.csv
+*.html
+.venv/
+__pycache__/
