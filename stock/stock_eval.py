@@ -49,6 +49,7 @@ SCORE_WEIGHTS = {
 	"momentum_3m_negative": -8,
 	"deep_pullback_bonus": 5,
 	"near_52w_low_penalty": -6,
+	"fundamental_total_cap": 16,
 }
 
 RATING_CUTOFFS = {
@@ -229,6 +230,86 @@ def download_history(symbol: str, period: str, attempts: int = 3) -> pd.DataFram
 	return last_hist
 
 
+def safe_float(value: object) -> float:
+	try:
+		if value is None:
+			return math.nan
+		f = float(value)
+		if math.isinf(f):
+			return math.nan
+		return f
+	except Exception:
+		return math.nan
+
+
+def get_fundamentals(symbol: str) -> dict[str, float]:
+	"""Fetch a small set of fundamental fields from yfinance info."""
+	with contextlib.redirect_stdout(io.StringIO()), contextlib.redirect_stderr(io.StringIO()):
+		info = yf.Ticker(symbol).info or {}
+
+	return {
+		"forward_pe": safe_float(info.get("forwardPE")),
+		"profit_margin": safe_float(info.get("profitMargins")),
+		"earnings_growth": safe_float(info.get("earningsGrowth")),
+		"debt_to_equity": safe_float(info.get("debtToEquity")),
+	}
+
+
+def score_fundamentals(f: dict[str, float]) -> tuple[float, list[str], list[str]]:
+	"""Return a continuous fundamental score and short notes.
+
+	The intent is to improve ranking resolution while keeping technicals primary.
+	"""
+	score = 0.0
+	pos: list[str] = []
+	neg: list[str] = []
+
+	earnings_growth = f.get("earnings_growth", math.nan)
+	profit_margin = f.get("profit_margin", math.nan)
+	debt_to_equity = f.get("debt_to_equity", math.nan)
+	forward_pe = f.get("forward_pe", math.nan)
+
+	# Earnings growth: 20% approx maps near +6, negative growth penalized.
+	if not math.isnan(earnings_growth):
+		growth_pts = max(-6.0, min(6.0, earnings_growth * 30.0))
+		score += growth_pts
+		if growth_pts >= 2.0:
+			pos.append(f"Earnings growth is strong ({earnings_growth * 100:.1f}%).")
+		elif growth_pts <= -2.0:
+			neg.append(f"Earnings growth is weak ({earnings_growth * 100:.1f}%).")
+
+	# Profit margin: 10% baseline; better margins get small bonus.
+	if not math.isnan(profit_margin):
+		margin_pts = max(-5.0, min(5.0, (profit_margin - 0.10) * 40.0))
+		score += margin_pts
+		if margin_pts >= 1.5:
+			pos.append(f"Profit margin is healthy ({profit_margin * 100:.1f}%).")
+		elif margin_pts <= -1.5:
+			neg.append(f"Profit margin is thin ({profit_margin * 100:.1f}%).")
+
+	# Debt-to-equity: lower tends to be safer (rough heuristic).
+	if not math.isnan(debt_to_equity):
+		de_pts = max(-4.0, min(4.0, (100.0 - debt_to_equity) / 25.0))
+		score += de_pts
+		if de_pts >= 1.5:
+			pos.append(f"Debt load looks moderate (D/E {debt_to_equity:.1f}).")
+		elif de_pts <= -1.5:
+			neg.append(f"Debt load looks elevated (D/E {debt_to_equity:.1f}).")
+
+	# Forward P/E: extreme valuation gets mild penalty; reasonable gets small bonus.
+	if not math.isnan(forward_pe) and forward_pe > 0:
+		pe_pts = max(-4.0, min(4.0, (25.0 - forward_pe) / 5.0))
+		score += pe_pts
+		if pe_pts >= 1.5:
+			pos.append(f"Valuation is more moderate (fwd P/E {forward_pe:.1f}).")
+		elif pe_pts <= -1.5:
+			neg.append(f"Valuation looks rich (fwd P/E {forward_pe:.1f}).")
+
+	cap = float(SCORE_WEIGHTS["fundamental_total_cap"])
+	score = max(-cap, min(cap, score))
+	return score, pos, neg
+
+
 def score_one_ticker(symbol: str, period: str = "1y") -> dict:
 	original_symbol = symbol.strip().upper()
 	yahoo_symbol = normalize_symbol_for_yahoo(original_symbol)
@@ -332,6 +413,13 @@ def score_one_ticker(symbol: str, period: str = "1y") -> dict:
 		score += SCORE_WEIGHTS["near_52w_low_penalty"]
 		negatives.append("Trading close to 52-week low (higher downside risk).")
 
+	# Add a secondary continuous fundamental overlay to reduce tied scores.
+	fundamentals = get_fundamentals(lookup_symbol)
+	fund_score, fund_pos, fund_neg = score_fundamentals(fundamentals)
+	score += fund_score
+	positives.extend(fund_pos[:2])
+	negatives.extend(fund_neg[:2])
+
 	score_for_rating = max(0.0, min(100.0, float(score)))
 
 	if score_for_rating >= RATING_CUTOFFS["buy_leaning"]:
@@ -362,6 +450,7 @@ def score_one_ticker(symbol: str, period: str = "1y") -> dict:
 		"%_fr_52w_h": round(pct_fr_52w_h, 1) if not math.isnan(pct_fr_52w_h) else math.nan,
 		"%_fr_52w_l": round(pct_fr_52w_l, 1) if not math.isnan(pct_fr_52w_l) else math.nan,
 		"mom_3m_%": round(momentum_3m, 1) if not math.isnan(momentum_3m) else math.nan,
+		"fund_score": round(fund_score, 2),
 		"score": round(float(score), 2),
 		"rating": rating,
 		"notes": " ".join(note_parts) if note_parts else "No clear signals yet.",
@@ -610,7 +699,7 @@ def write_html_report(
 		.data-table th {{ background: #f8fafc; position: sticky; top: 0; }}
 		/* Keep notes mostly on one line; table can scroll horizontally as needed. */
 		.data-table th:last-child, .data-table td:last-child {{
-			min-width: 640px;
+			min-width: 460px;
 			white-space: nowrap;
 		}}
 		.legend li {{ margin: 6px 0; color: var(--muted); }}
@@ -626,7 +715,7 @@ def write_html_report(
 <body>
 	<div class=\"wrap\">
 		<section class=\"hero\">
-			<h1>Stock Technical Evaluator Dashboard</h1>
+			<h1>Sciple's Stock Technical Evaluator Dashboard</h1>
 			<p>Generated: {datetime.now().strftime("%Y-%m-%d %H:%M:%S")}</p>
 			<p>Positions source: {positions_source or "Not found"}</p>
 		</section>
@@ -798,6 +887,7 @@ def main() -> None:
 				"price",
 				"rsi14",
 				"mom_3m_%",
+				"fund_score",
 				"score",
 				"rating",
 				"notes",
@@ -825,6 +915,7 @@ def main() -> None:
 			"%_fr_52w_h",
 			"%_fr_52w_l",
 			"mom_3m_%",
+			"fund_score",
 			"score",
 			"rating",
 			"notes",
