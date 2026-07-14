@@ -17,6 +17,3 @@ if __name__ == "__main__":
     names_with_dups = ('bob','larry','sam','tim','tony','sally','bob')
     unique_names = get_unique_list(names_with_dups)
     print(unique_names)
-
-
-    
