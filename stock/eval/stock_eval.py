@@ -17,6 +17,7 @@ from __future__ import annotations
 import argparse
 import contextlib
 import glob
+import html
 import io
 import json
 import logging
@@ -34,6 +35,8 @@ import yfinance as yf
 DEFAULT_DOWNLOADS_DIR = "/home/ts/Downloads"
 DEFAULT_POSITIONS_PATTERN = "Community Property-Positions-*.csv"
 DEFAULT_OTHER_TICKERS_FILENAME = "other_tickers_to_eval.csv"
+DEFAULT_INPUT_DIR = "/home/dev/py/stock/eval/input"
+DEFAULT_OUTPUT_DIR = "/home/dev/py/stock/eval/output"
 
 # Personalize these values to match your own buy-vs-sell style.
 SCORE_WEIGHTS = {
@@ -120,6 +123,41 @@ LEGACY_TICKER_MAP = {
 	"XEC": "CVX",
 	"XLNX": "AMD",
 }
+
+
+INVEST_CATEGORY_MAP = {
+	"NTSX": "Blended / Efficient Core",
+	"VTMFX": "Blended / Efficient Core",
+	"CGDV": "Dividend & Value Equity",
+	"CGUS": "Dividend & Value Equity",
+	"DTD": "Dividend & Value Equity",
+	"SCHD": "Dividend & Value Equity ETFs",
+	"SCHZ": "Fixed Income (Bonds/Cash)",
+	"SGOV": "Fixed Income (Bonds/Cash)",
+	"FNDX": "Growth & Core Equity",
+	"SCHB": "Growth & Core Equity",
+	"SCHG": "Growth & Core Equity",
+	"SCHM": "Growth & Core Equity",
+	"VOO": "Growth & Core Equity",
+	"CB": "Indiv Stock",
+	"KEY": "Indiv Stock",
+	"KIM": "Indiv Stock",
+	"LMT": "Indiv Stock",
+	"LNG": "Indiv Stock",
+	"RTX": "Indiv Stock",
+	"VLO": "Indiv Stock",
+	"SCHP": "Inflation-protected Treasury bonds.",
+}
+
+INVEST_CATEGORY_ORDER = [
+	"Blended / Efficient Core",
+	"Dividend & Value Equity",
+	"Dividend & Value Equity ETFs",
+	"Fixed Income (Bonds/Cash)",
+	"Growth & Core Equity",
+	"Indiv Stock",
+	"Inflation-protected Treasury bonds.",
+]
 
 
 # Keep terminal output clean when Yahoo has stale/delisted symbols.
@@ -587,12 +625,12 @@ def write_csv_exports(
 	paths: dict[str, str] = {}
 
 	if not positions_table.empty:
-		p = output_dir / f"positions_scores_{timestamp}.csv"
+		p = output_dir / f"{timestamp}_positions_scores.csv"
 		positions_table.to_csv(p, index=False)
 		paths["positions_csv"] = str(p)
 
 	if not watchlist_table.empty:
-		w = output_dir / f"watchlist_scores_{timestamp}.csv"
+		w = output_dir / f"{timestamp}_watchlist_scores.csv"
 		watchlist_table.to_csv(w, index=False)
 		paths["watchlist_csv"] = str(w)
 
@@ -608,11 +646,130 @@ def write_csv_exports(
 			all_rows.append(w2)
 
 		combined = pd.concat(all_rows, ignore_index=True)
-		c = output_dir / f"stock_scores_combined_{timestamp}.csv"
+		c = output_dir / f"{timestamp}_stock_scores_combined.csv"
 		combined.to_csv(c, index=False)
 		paths["combined_csv"] = str(c)
 
 	return paths
+
+
+def add_position_grouping_and_subtotals(table: pd.DataFrame) -> pd.DataFrame:
+	"""Add investment category, pct_total, and category subtotal rows."""
+	if table.empty:
+		return table
+
+	result = table.copy()
+	if "symbol" in result.columns:
+		result["symbol"] = result["symbol"].astype(str).str.strip().str.upper()
+
+	result["invest_category"] = result["symbol"].map(INVEST_CATEGORY_MAP).fillna("Uncategorized")
+
+	if "market_value" in result.columns:
+		result["market_value"] = pd.to_numeric(result["market_value"], errors="coerce")
+		total_market_value = float(result["market_value"].sum(skipna=True))
+		if total_market_value > 0:
+			result["pct_total"] = (result["market_value"] / total_market_value) * 100.0
+		else:
+			result["pct_total"] = math.nan
+	else:
+		result["pct_total"] = math.nan
+
+	category_order = INVEST_CATEGORY_ORDER.copy()
+	if (result["invest_category"] == "Uncategorized").any():
+		category_order.append("Uncategorized")
+
+	rows: list[dict] = []
+	for category in category_order:
+		block = result[result["invest_category"] == category].copy()
+		if block.empty:
+			continue
+
+		if "symbol" in block.columns:
+			block = block.sort_values(by=["symbol"], ascending=[True], na_position="last")
+
+		rows.extend(block.to_dict(orient="records"))
+
+		subtotal = {col: "" for col in result.columns}
+		subtotal["invest_category"] = f"{category} Result"
+		if "symbol" in subtotal:
+			subtotal["symbol"] = ""
+		if "company_name" in subtotal:
+			subtotal["company_name"] = "Subtotal"
+		if "market_value" in subtotal:
+			subtotal["market_value"] = float(block["market_value"].sum(skipna=True))
+		if "pct_total" in subtotal:
+			subtotal["pct_total"] = float(block["pct_total"].sum(skipna=True))
+		rows.append(subtotal)
+
+	return pd.DataFrame(rows, columns=result.columns)
+
+
+def format_pct_total_for_display(table: pd.DataFrame) -> pd.DataFrame:
+	"""Render numeric pct_total values as strings with a percent sign."""
+	if table.empty or "pct_total" not in table.columns:
+		return table
+
+	result = table.copy()
+
+	def _fmt(value: object) -> str:
+		if pd.isna(value):
+			return ""
+		return f"{float(value):.2f}%"
+
+	result["pct_total"] = result["pct_total"].apply(_fmt)
+	return result
+
+
+def format_market_value_for_display(table: pd.DataFrame) -> pd.DataFrame:
+	"""Render market_value with thousands separators and no currency symbol."""
+	if table.empty or "market_value" not in table.columns:
+		return table
+
+	result = table.copy()
+
+	def _fmt(value: object) -> str:
+		if pd.isna(value):
+			return ""
+		return f"{float(value):,.2f}".rstrip("0").rstrip(".")
+
+	result["market_value"] = result["market_value"].apply(_fmt)
+	return result
+
+
+def reorder_positions_columns(table: pd.DataFrame) -> pd.DataFrame:
+	"""Keep requested positions column order stable in output."""
+	desired = [
+		"invest_category",
+		"symbol",
+		"company_name",
+		"sector",
+		"qty",
+		"cost_basis",
+		"market_value",
+		"pct_total",
+		"gain_pct",
+		"price",
+		"rsi14",
+		"mom_3m_%",
+		"fund_score",
+		"score",
+		"rating",
+		"notes",
+	]
+	present_desired = [c for c in desired if c in table.columns]
+	remaining = [c for c in table.columns if c not in present_desired]
+	return table[present_desired + remaining]
+
+
+def fill_missing_for_display(table: pd.DataFrame) -> pd.DataFrame:
+	"""Replace missing values with empty strings to avoid showing <NA>."""
+	if table.empty:
+		return table
+
+	result = table.copy()
+	for col in result.columns:
+		result[col] = result[col].apply(lambda v: "" if pd.isna(v) else v)
+	return result
 
 
 def _chart_payload(df: pd.DataFrame) -> tuple[list[str], list[float]]:
@@ -626,6 +783,38 @@ def _chart_payload(df: pd.DataFrame) -> tuple[list[str], list[float]]:
 	return temp["symbol"].astype(str).tolist(), temp["score"].astype(float).tolist()
 
 
+def render_positions_table_html(table: pd.DataFrame) -> str:
+	"""Render positions HTML with subtotal styling hooks and spacer rows."""
+	if table.empty:
+		return "<p>No current positions were available.</p>"
+
+	cols = list(table.columns)
+	header_cells = "".join(f"<th>{html.escape(str(col))}</th>" for col in cols)
+	body_rows: list[str] = []
+
+	for _, row in table.iterrows():
+		is_subtotal = str(row.get("company_name", "")).strip().lower() == "subtotal"
+		row_class = ' class="subtotal-row"' if is_subtotal else ""
+
+		cells: list[str] = []
+		for col in cols:
+			value = row[col]
+			text = "" if pd.isna(value) else str(value)
+			cells.append(f"<td>{html.escape(text)}</td>")
+
+		body_rows.append(f"<tr{row_class}>{''.join(cells)}</tr>")
+
+		if is_subtotal:
+			body_rows.append(f'<tr class="spacer-row"><td colspan="{len(cols)}"></td></tr>')
+
+	return (
+		'<table border="1" class="dataframe data-table">'
+		f"<thead><tr>{header_cells}</tr></thead>"
+		f"<tbody>{''.join(body_rows)}</tbody>"
+		"</table>"
+	)
+
+
 def write_html_report(
 	output_dir: Path,
 	timestamp: str,
@@ -633,16 +822,12 @@ def write_html_report(
 	positions_table: pd.DataFrame,
 	watchlist_table: pd.DataFrame,
 ) -> str:
-	output_path = output_dir / f"stock_dashboard_{timestamp}.html"
+	output_path = output_dir / f"{timestamp}_stock_dashboard.html"
 
 	positions_labels, positions_scores = _chart_payload(positions_table)
 	watch_labels, watch_scores = _chart_payload(watchlist_table)
 
-	positions_html = (
-		positions_table.to_html(index=False, classes="data-table", na_rep="")
-		if not positions_table.empty
-		else "<p>No current positions were available.</p>"
-	)
+	positions_html = render_positions_table_html(positions_table)
 	watchlist_html = (
 		watchlist_table.to_html(index=False, classes="data-table", na_rep="")
 		if not watchlist_table.empty
@@ -697,6 +882,17 @@ def write_html_report(
 		.data-table {{ width: 100%; border-collapse: collapse; font-size: 0.92rem; }}
 		.data-table th, .data-table td {{ border-bottom: 1px solid #e5e7eb; padding: 8px; text-align: left; }}
 		.data-table th {{ background: #f8fafc; position: sticky; top: 0; }}
+		.data-table tr.subtotal-row td {{
+			font-weight: 700;
+			border-top: 4px solid #334155;
+			background: #f8fafc;
+		}}
+		.data-table tr.spacer-row td {{
+			height: 12px;
+			padding: 0;
+			border: 0;
+			background: transparent;
+		}}
 		/* Keep notes mostly on one line; table can scroll horizontally as needed. */
 		.data-table th:last-child, .data-table td:last-child {{
 			min-width: 460px;
@@ -809,7 +1005,7 @@ def main() -> None:
 		help="CSV file of additional tickers (default: other_tickers_to_eval.csv in script folder)",
 	)
 	parser.add_argument("--period", default="1y", help="History period for indicators (default: 1y)")
-	parser.add_argument("--output-dir", default="/home/dev/py/stock/output", help="Directory for HTML and CSV output files")
+	parser.add_argument("--output-dir", default=DEFAULT_OUTPUT_DIR, help="Directory for HTML and CSV output files")
 	parser.add_argument("--no-progress", action="store_true", help="Disable progress indicator output")
 	args = parser.parse_args()
 
@@ -838,8 +1034,7 @@ def main() -> None:
 			print(f"Reason: {exc}")
 			positions_file = None
 
-	script_dir = Path(__file__).resolve().parent
-	auto_other_tickers_file = script_dir / DEFAULT_OTHER_TICKERS_FILENAME
+	auto_other_tickers_file = Path(DEFAULT_INPUT_DIR) / DEFAULT_OTHER_TICKERS_FILENAME
 
 	watchlist_file = args.watchlist_file
 	if args.other_tickers_file:
@@ -877,12 +1072,14 @@ def main() -> None:
 			]
 			merged = positions_scores.merge(positions_df[display_cols], on="symbol", how="left")
 			ordered = [
+				"invest_category",
 				"symbol",
 				"company_name",
 				"sector",
 				"qty",
 				"cost_basis",
 				"market_value",
+				"pct_total",
 				"gain_pct",
 				"price",
 				"rsi14",
@@ -894,6 +1091,10 @@ def main() -> None:
 			]
 			ordered = [c for c in ordered if c in merged.columns]
 			positions_table = merged[ordered].copy()
+			positions_table = add_position_grouping_and_subtotals(positions_table)
+			positions_table = format_market_value_for_display(positions_table)
+			positions_table = format_pct_total_for_display(positions_table)
+			positions_table = reorder_positions_columns(positions_table)
 		else:
 			positions_table = positions_scores.copy()
 
@@ -922,6 +1123,9 @@ def main() -> None:
 		]
 		ordered = [c for c in ordered if c in watch_scores.columns]
 		watchlist_table = watch_scores[ordered].copy()
+
+	positions_table = fill_missing_for_display(positions_table)
+	watchlist_table = fill_missing_for_display(watchlist_table)
 
 	exports = write_csv_exports(output_dir, timestamp, positions_table, watchlist_table)
 	html_path = write_html_report(
