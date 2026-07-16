@@ -10,11 +10,14 @@ Examples:
 	python stock_eval.py --watchlist "MSFT,NVDA,AMD"
 	python stock_eval.py --watchlist-file /home/dev/py/stock/watchlist.txt
 	python stock_eval.py --positions-file "/home/ts/Downloads/Community Property-Positions-2026-07-14-123800.csv"
+	run on command line with ->
+	/home/dev/py/.venv/bin/python stock_eval.py --watchlist "AAPL,MSFT,NVDA,AMD,GOOGL" --no-progress --output-dir /home/dev/py/stock/eval/output
 """
 
 from __future__ import annotations
 
 import argparse
+import concurrent.futures
 import contextlib
 import glob
 import html
@@ -62,68 +65,6 @@ RATING_CUTOFFS = {
 	"reduce_risk": 30,
 }
 
-# Legacy symbol aliases to improve Yahoo lookup success.
-LEGACY_TICKER_MAP = {
-	"RTN": "RTX",   # Raytheon -> RTX (Raytheon Technologies / RTX Corp)
-	"FB": "META",   # Facebook -> Meta
-	"ABC": "COR",   # AmerisourceBergen -> Cencora
-	"ADS": "BFH",   # Alliance Data Systems -> Bread Financial
-	"AET": "CVS",
-	"AGN": "ABBV",
-	"ALXN": "AZN",
-	"ANDV": "MPC",
-	"ANTM": "ELV",
-	"ARNC": "HWM",
-	"ATVI": "MSFT",
-	"BHGE": "BKR",
-	"CA": "AVGO",
-	"CBG": "CBRE",
-	"CBS": "PARA",
-	"CELG": "BMY",
-	"CERN": "ORCL",
-	"COL": "RTX",
-	"CSRA": "GD",
-	"CTL": "LUMN",
-	"CXO": "COP",
-	"DISCA": "WBD",
-	"DISCK": "WBD",
-	"DPS": "KDP",
-	"DRE": "PLD",
-	"DWDP": "DD",
-	"ESRX": "CI",
-	"ETFC": "MS",
-	"FBHS": "FBIN",
-	"FLIR": "TDY",
-	"HCN": "WELL",
-	"HCP": "DOC",
-	"HRS": "LHX",
-	"JEC": "J",
-	"KORS": "CPRI",
-	"KSU": "CNI",
-	"LLL": "LHX",
-	"LUK": "JEF",
-	"MON": "BAYRY",
-	"MYL": "VTRS",
-	"NBL": "CVX",
-	"PBCT": "MTB",
-	"PX": "LIN",
-	"PXD": "XOM",
-	"RHT": "IBM",
-	"SCG": "D",
-	"SNI": "WBD",
-	"SYMC": "GEN",
-	"TIF": "LVMUY",
-	"TMK": "GL",
-	"TSS": "GPN",
-	"TWX": "WBD",
-	"UTX": "RTX",
-	"VIAB": "PARA",
-	"WLTW": "WTW",
-	"WYN": "WH",
-	"XEC": "CVX",
-	"XLNX": "AMD",
-}
-
 
 INVEST_CATEGORY_MAP = {
 	"NTSX": "Blended / Efficient Core",
@@ -146,6 +87,15 @@ INVEST_CATEGORY_MAP = {
 	"LNG": "Indiv Stock",
 	"RTX": "Indiv Stock",
 	"VLO": "Indiv Stock",
+	"ABNB": "Indiv Stock",
+	"EW": "Indiv Stock",
+	"GD": "Indiv Stock",
+	"GOOG": "Indiv Stock",
+	"NDSN": "Indiv Stock",
+	"OKE": "Indiv Stock",
+	"TPL": "Indiv Stock",
+	"UNH": "Indiv Stock",
+	"XYZ": "Indiv Stock",
 	"SCHP": "Inflation-protected Treasury bonds.",
 }
 
@@ -268,6 +218,58 @@ def download_history(symbol: str, period: str, attempts: int = 3) -> pd.DataFram
 	return last_hist
 
 
+def download_history_batch(symbols: list[str], period: str, attempts: int = 2) -> pd.DataFrame:
+	"""Download many symbols in one call to reduce network round-trips."""
+	clean = [s for s in dict.fromkeys(symbols) if s]
+	if not clean:
+		return pd.DataFrame()
+
+	last_hist = pd.DataFrame()
+	ticker_str = " ".join(clean)
+	for attempt in range(1, attempts + 1):
+		with contextlib.redirect_stdout(io.StringIO()), contextlib.redirect_stderr(io.StringIO()):
+			hist = yf.download(
+				ticker_str,
+				period=period,
+				interval="1d",
+				progress=False,
+				auto_adjust=False,
+				threads=True,
+				group_by="ticker",
+			)
+		last_hist = hist
+		if not hist.empty:
+			return hist
+		if attempt < attempts:
+			time.sleep(0.35 * attempt)
+	return last_hist
+
+
+def extract_symbol_history(batch_hist: pd.DataFrame, symbol: str) -> pd.DataFrame:
+	"""Extract one symbol's OHLCV frame from a batch yfinance response."""
+	if batch_hist.empty:
+		return pd.DataFrame()
+
+	if isinstance(batch_hist.columns, pd.MultiIndex):
+		lvl0 = set(batch_hist.columns.get_level_values(0))
+		lvl1 = set(batch_hist.columns.get_level_values(1))
+		if symbol in lvl0:
+			return batch_hist[symbol].copy()
+		if symbol in lvl1:
+			return batch_hist.xs(symbol, axis=1, level=1, drop_level=True).copy()
+		return pd.DataFrame()
+
+	# yfinance may return single-symbol flat columns.
+	return batch_hist.copy()
+
+
+def chunked(items: list[str], size: int) -> list[list[str]]:
+	"""Split a list into fixed-size chunks."""
+	if size <= 0:
+		return [items]
+	return [items[i:i + size] for i in range(0, len(items), size)]
+
+
 def safe_float(value: object) -> float:
 	try:
 		if value is None:
@@ -291,6 +293,14 @@ def get_fundamentals(symbol: str) -> dict[str, float]:
 		"earnings_growth": safe_float(info.get("earningsGrowth")),
 		"debt_to_equity": safe_float(info.get("debtToEquity")),
 	}
+
+
+def ticker_lookup_candidates(symbol: str) -> tuple[str, str, list[str]]:
+	"""Return (original, yahoo_normalized, unique_candidates)."""
+	original_symbol = symbol.strip().upper()
+	yahoo_symbol = normalize_symbol_for_yahoo(original_symbol)
+	candidates = list(dict.fromkeys([yahoo_symbol, original_symbol]))
+	return original_symbol, yahoo_symbol, candidates
 
 
 def score_fundamentals(f: dict[str, float]) -> tuple[float, list[str], list[str]]:
@@ -348,20 +358,31 @@ def score_fundamentals(f: dict[str, float]) -> tuple[float, list[str], list[str]
 	return score, pos, neg
 
 
-def score_one_ticker(symbol: str, period: str = "1y") -> dict:
-	original_symbol = symbol.strip().upper()
-	yahoo_symbol = normalize_symbol_for_yahoo(original_symbol)
-	lookup_symbol = LEGACY_TICKER_MAP.get(yahoo_symbol, yahoo_symbol)
-	mapped_note = f" (mapped to {lookup_symbol})" if lookup_symbol != yahoo_symbol else ""
-	hist = download_history(lookup_symbol, period=period)
+def score_one_ticker(
+	symbol: str,
+	period: str = "1y",
+	prefetched_histories: dict[str, pd.DataFrame] | None = None,
+	prefetched_fundamentals: dict[str, dict[str, float]] | None = None,
+) -> dict:
+	original_symbol, yahoo_symbol, candidates = ticker_lookup_candidates(symbol)
+	hist = pd.DataFrame()
+	used_symbol = ""
 
-	# Retry normalized symbol if alias lookup returned no data.
-	if (hist.empty or len(hist) < 60) and lookup_symbol != yahoo_symbol:
-		hist = download_history(yahoo_symbol, period=period)
+	for candidate in candidates:
+		candidate_hist = pd.DataFrame()
+		if prefetched_histories is not None and candidate in prefetched_histories:
+			candidate_hist = prefetched_histories[candidate]
 
-	# Retry original symbol only if different and first attempt returned no data.
-	if (hist.empty or len(hist) < 60) and yahoo_symbol != original_symbol:
-		hist = download_history(original_symbol, period=period)
+		if candidate_hist.empty or len(candidate_hist) < 60:
+			candidate_hist = download_history(candidate, period=period)
+
+		if not candidate_hist.empty and len(candidate_hist) >= 60:
+			hist = candidate_hist
+			used_symbol = candidate
+			break
+
+	if not used_symbol:
+		used_symbol = yahoo_symbol
 
 	if hist.empty or len(hist) < 60:
 		return {
@@ -369,7 +390,7 @@ def score_one_ticker(symbol: str, period: str = "1y") -> dict:
 			"status": "No/limited data",
 			"score": math.nan,
 			"rating": "Insufficient data",
-			"notes": f"Not enough price history to compute indicators{mapped_note}. Legacy ticker changes or temporary data-source misses can cause this.",
+			"notes": "Not enough price history to compute indicators.",
 		}
 
 	close = as_series(hist["Close"])
@@ -452,7 +473,11 @@ def score_one_ticker(symbol: str, period: str = "1y") -> dict:
 		negatives.append("Trading close to 52-week low (higher downside risk).")
 
 	# Add a secondary continuous fundamental overlay to reduce tied scores.
-	fundamentals = get_fundamentals(lookup_symbol)
+	fundamentals = None
+	if prefetched_fundamentals is not None:
+		fundamentals = prefetched_fundamentals.get(used_symbol)
+	if fundamentals is None:
+		fundamentals = get_fundamentals(used_symbol)
 	fund_score, fund_pos, fund_neg = score_fundamentals(fundamentals)
 	score += fund_score
 	positives.extend(fund_pos[:2])
@@ -580,11 +605,50 @@ def load_ticker_metadata(file_path: str | None) -> pd.DataFrame:
 def evaluate_group(tickers: list[str], period: str, group_label: str = "Tickers", show_progress: bool = True) -> pd.DataFrame:
 	rows = []
 	total = len(tickers)
+	prefetched_histories: dict[str, pd.DataFrame] = {}
+	prefetched_fundamentals: dict[str, dict[str, float]] = {}
+
+	if total > 1:
+		all_candidates: list[str] = []
+		for t in tickers:
+			_, _, candidates = ticker_lookup_candidates(t)
+			all_candidates.extend(candidates)
+
+		unique_candidates = list(dict.fromkeys(all_candidates))
+		for sym_chunk in chunked(unique_candidates, 100):
+			batch = download_history_batch(sym_chunk, period=period)
+			for s in sym_chunk:
+				prefetched_histories[s] = extract_symbol_history(batch, s)
+
+		# Fundamentals still require per-symbol API calls; do them concurrently.
+		fund_symbols = list(dict.fromkeys([ticker_lookup_candidates(t)[1] for t in tickers]))
+		max_workers = min(16, max(4, len(fund_symbols)))
+		with concurrent.futures.ThreadPoolExecutor(max_workers=max_workers) as ex:
+			future_to_symbol = {ex.submit(get_fundamentals, s): s for s in fund_symbols}
+			for fut in concurrent.futures.as_completed(future_to_symbol):
+				s = future_to_symbol[fut]
+				try:
+					prefetched_fundamentals[s] = fut.result()
+				except Exception:
+					prefetched_fundamentals[s] = {
+						"forward_pe": math.nan,
+						"profit_margin": math.nan,
+						"earnings_growth": math.nan,
+						"debt_to_equity": math.nan,
+					}
+
 	for idx, t in enumerate(tickers, start=1):
 		if show_progress:
 			print(f"\r[{idx}/{total}] {group_label}: evaluating {t}...", end="", flush=True)
 		try:
-			rows.append(score_one_ticker(t, period=period))
+			rows.append(
+				score_one_ticker(
+					t,
+					period=period,
+					prefetched_histories=prefetched_histories,
+					prefetched_fundamentals=prefetched_fundamentals,
+				)
+			)
 		except Exception as exc:
 			rows.append(
 				{
@@ -772,6 +836,24 @@ def fill_missing_for_display(table: pd.DataFrame) -> pd.DataFrame:
 	return result
 
 
+def build_sector_high_scores_table(watchlist_table: pd.DataFrame) -> pd.DataFrame:
+	"""Keep only the highest-scoring watchlist item(s) per sector."""
+	if watchlist_table.empty or "sector" not in watchlist_table.columns or "score" not in watchlist_table.columns:
+		return pd.DataFrame(columns=watchlist_table.columns)
+
+	temp = watchlist_table.copy()
+	temp["sector"] = temp["sector"].apply(lambda v: "Uncategorized" if pd.isna(v) or str(v).strip() == "" else str(v).strip())
+	temp["score"] = pd.to_numeric(temp["score"], errors="coerce")
+	temp = temp.dropna(subset=["score"])
+	if temp.empty:
+		return pd.DataFrame(columns=watchlist_table.columns)
+
+	sector_max = temp.groupby("sector")["score"].transform("max")
+	high = temp[temp["score"] == sector_max].copy()
+	high = high.sort_values(by=["sector", "score", "symbol"], ascending=[True, False, True], na_position="last")
+	return high
+
+
 def _chart_payload(df: pd.DataFrame) -> tuple[list[str], list[float]]:
 	if df.empty or "symbol" not in df.columns or "score" not in df.columns:
 		return [], []
@@ -821,6 +903,7 @@ def write_html_report(
 	positions_source: str | None,
 	positions_table: pd.DataFrame,
 	watchlist_table: pd.DataFrame,
+	sector_high_scores_table: pd.DataFrame,
 ) -> str:
 	output_path = output_dir / f"{timestamp}_stock_dashboard.html"
 
@@ -832,6 +915,11 @@ def write_html_report(
 		watchlist_table.to_html(index=False, classes="data-table", na_rep="")
 		if not watchlist_table.empty
 		else "<p>No watchlist tickers were provided.</p>"
+	)
+	sector_high_scores_html = (
+		sector_high_scores_table.to_html(index=False, classes="data-table", na_rep="")
+		if not sector_high_scores_table.empty
+		else "<p>No sector high scores were available from watchlist data.</p>"
 	)
 
 	html = f"""<!doctype html>
@@ -935,6 +1023,11 @@ def write_html_report(
 			<section class=\"card span-2\">
 				<h2>Watchlist Table</h2>
 				{watchlist_html}
+			</section>
+
+			<section class=\"card span-2\">
+				<h2>Sector High Scores</h2>
+				{sector_high_scores_html}
 			</section>
 
 			<section class=\"card span-2\">
@@ -1052,6 +1145,7 @@ def main() -> None:
 
 	positions_table = pd.DataFrame()
 	watchlist_table = pd.DataFrame()
+	sector_high_scores_table = pd.DataFrame()
 
 	if position_tickers:
 		positions_scores = evaluate_group(
@@ -1123,9 +1217,11 @@ def main() -> None:
 		]
 		ordered = [c for c in ordered if c in watch_scores.columns]
 		watchlist_table = watch_scores[ordered].copy()
+		sector_high_scores_table = build_sector_high_scores_table(watchlist_table)
 
 	positions_table = fill_missing_for_display(positions_table)
 	watchlist_table = fill_missing_for_display(watchlist_table)
+	sector_high_scores_table = fill_missing_for_display(sector_high_scores_table)
 
 	exports = write_csv_exports(output_dir, timestamp, positions_table, watchlist_table)
 	html_path = write_html_report(
@@ -1134,6 +1230,7 @@ def main() -> None:
 		positions_source=positions_file,
 		positions_table=positions_table,
 		watchlist_table=watchlist_table,
+		sector_high_scores_table=sector_high_scores_table,
 	)
 
 	print("Visual report generated successfully.")
