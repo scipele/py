@@ -6,3 +6,5 @@ financial/results.md
 *.html
 .venv/
 __pycache__/
+*.png
+*.pdf
