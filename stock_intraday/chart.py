@@ -3,7 +3,12 @@ import argparse
 import pandas as pd
 import numpy as np
 import mplfinance as mpf
+import re
+import matplotlib.pyplot as plt
 from pathlib import Path
+
+# --- EXCLUSION FILTERS CONFIGURED AT THE TOP ---
+EXCLUDE_NAMES_CONTAINING = r"etf|fund|money|adm"
 
 # Silence the matplotlib font manager warnings specifically
 logging.getLogger('matplotlib.font_manager').setLevel(logging.ERROR)
@@ -16,7 +21,8 @@ SCHWAB_FOLDER = Path("/home/ts/Downloads")
 def find_schwab_data():
     """
     Finds the absolute latest dated Schwab CSV export file in Downloads,
-    parses it, and returns two dictionaries:
+    parses it, filters out rows matching EXCLUDE_NAMES_CONTAINING, 
+    and returns two dictionaries:
     1. Mapping tickers to their Cost/Share (entry_prices).
     2. Mapping tickers to their Full Corporate Name Description (company_names).
     """
@@ -54,9 +60,18 @@ def find_schwab_data():
         price_map = {}
         name_map = {}
         
+        # Compile global pattern ignoring uppercase/lowercase sensitivity
+        exclude_regex = re.compile(EXCLUDE_NAMES_CONTAINING, re.IGNORECASE)
+        
         # Pull details row by row, tracking descriptions
         for _, row in schwab_df.dropna(subset=['Symbol']).iterrows():
             sym = str(row['Symbol']).strip().upper()
+            desc = str(row.get('Description', '')).strip()
+            
+            # --- EVALUATE FILTER PATTERNS AGAINST DESCRIPTION FIELD ---
+            if desc and exclude_regex.search(desc):
+                print(f"Skipping Schwab processing for {sym}: Name matches exclusion filter ('{desc}')")
+                continue
             
             # 1. Store the Cost/Share entry price mapping
             if 'Cost/Share' in schwab_df.columns and pd.notna(row['Cost/Share']):
@@ -68,7 +83,7 @@ def find_schwab_data():
             
             # 2. Store the Description company name mapping
             if 'Description' in schwab_df.columns and pd.notna(row['Description']):
-                name_map[sym] = str(row['Description']).strip().upper()
+                name_map[sym] = desc.upper()
                 
         return price_map, name_map
     except Exception as e:
@@ -134,8 +149,7 @@ def create_chart(csv_file, days_to_plot, schwab_prices, schwab_names):
         company_name = common_stock_fallbacks.get(ticker, ticker)
         
     exchange = "NASDAQ" if ticker in ["QQQ", "AAPL", "MSFT", "TSLA", "NVDA"] else "NYSE"
-    title_string = f"{ticker} - {company_name} ({exchange}) - 5 Minute Chart ({days_to_plot} days)"
-    # -----------------------------------------------
+    sub_title_string = f"- {company_name} ({exchange}) | 5 Minute Chart ({days_to_plot} days)"
     
     # Look up the automated entry price using our mapped dictionary
     entry_price = schwab_prices.get(ticker, None)
@@ -189,23 +203,25 @@ def create_chart(csv_file, days_to_plot, schwab_prices, schwab_names):
     day_mask = df.index.normalize().isin(last_x_days)
     df_filtered = df[day_mask].copy() 
     
-    # --- AUTOMATED TICKSCALE: FIND EXACT COORD POSITION FOR EVERY MARKET OPEN ---
+    # --- AUTOMATED TICKSCALE WITH PANDAS INT RESOLUTION FIX ---
     df_filtered['date_str'] = df_filtered.index.strftime('%Y-%m-%d')
     tick_positions = []
     tick_labels = []
     
     for day_group, group_data in df_filtered.groupby('date_str'):
-        # FIXED: Added [0] to select only the first timestamp of the group
-        first_candle_idx = df_filtered.index.get_loc(group_data.index[0])
+        first_candle_ts = group_data.index.min()
+        first_candle_idx = df_filtered.index.get_loc(first_candle_ts)
+        
+        # Resolves range positions safely across long multi-day windows
         if isinstance(first_candle_idx, slice):
             first_candle_idx = first_candle_idx.start
+        elif hasattr(first_candle_idx, '__iter__'):
+            first_candle_idx = first_candle_idx[0]
             
-        tick_positions.append(first_candle_idx)
-        # FIXED: Added [0] to format the opening timestamp text label properly
-        tick_labels.append(group_data.index[0].strftime('%Y-%m-%d %H:%M'))
+        tick_positions.append(int(first_candle_idx))
+        tick_labels.append(first_candle_ts.strftime('%Y-%m-%d %H:%M'))
         
     df_filtered.drop(columns=['date_str'], inplace=True)
-    # ----------------------------------------------------------------------------
 
     # 3. Create lines container (Appended in your specific requested layout order)
     levels = []
@@ -221,22 +237,24 @@ def create_chart(csv_file, days_to_plot, schwab_prices, schwab_names):
         )
         
     # [ORDER 2]: prev_day_high
-    levels.append(
-        mpf.make_addplot(
-            pd.Series(previous_day_high, index=df_filtered.index),
-            color="orange", linestyle=":", width=1,
-            label=f"{previous_day_high:.2f} previous_day_high"
+    if previous_day_high is not None:
+        levels.append(
+            mpf.make_addplot(
+                pd.Series(previous_day_high, index=df_filtered.index),
+                color="orange", linestyle=":", width=1,
+                label=f"{previous_day_high:.2f} previous_day_high"
+            )
         )
-    )
     
     # [ORDER 3]: prev_day_low
-    levels.append(
-        mpf.make_addplot(
-            pd.Series(previous_day_low, index=df_filtered.index),
-            color="blue", linestyle=":", width=1,
-            label=f"{previous_day_low:.2f} previous_day_low"
+    if previous_day_low is not None:
+        levels.append(
+            mpf.make_addplot(
+                pd.Series(previous_day_low, index=df_filtered.index),
+                color="blue", linestyle=":", width=1,
+                label=f"{previous_day_low:.2f} previous_day_low"
+            )
         )
-    )
     
     # [ORDER 4]: swing_low
     if swing_low is not None:
@@ -273,37 +291,60 @@ def create_chart(csv_file, days_to_plot, schwab_prices, schwab_names):
         type="candle",
         volume=True,
         style="yahoo",
-        title=title_string,
+        title="",
         ylabel="Price",
         ylabel_lower="Volume",
         mav=(days_to_plot, 50),
         addplot=levels,
         figsize=(14, 8),
-        savefig=CHART_FOLDER / f"{ticker.lower()}.png",
         warn_too_much_data=5000,
-        hlines=dict(hlines=active_prices,
-        colors='none'),
+        hlines=dict(hlines=active_prices, colors='none'),
         returnfig=True
     )
+    
+    # --- CUSTOM METADATA TEXT BLOCKS FOR THUMBNAIL VISIBILITY ---
+    # FIXED: Increased font size to 90 (~3.2x larger) for immediate readability from a distance
+    fig.text(
+        0.05, 0.94, ticker,
+        fontsize=90, weight='bold', color='black', ha='left', va='center'
+    )
+    
+    # FIXED: Pushed X coordinate out to 0.28 to make clean room for the wider text layout
+    fig.text(
+        0.28, 0.94, sub_title_string,
+        fontsize=14, weight='normal', color='#444444', ha='left', va='center'
+    )
+    # -----------------------------------------------------------------
+
     # Explicitly force our calculated positions and labels to overwrite the bottom volume axis
     axlist[2].set_xticks(tick_positions)
     axlist[2].set_xticklabels(tick_labels, rotation=90, fontsize=9)
-
+    
     # Clean up and draw legend on the main candle axis container safely
     axlist[0].legend(loc="upper left", fontsize=10)
+    
+    # Save chart image canvas safely
     fig.savefig(CHART_FOLDER / f"{ticker.lower()}.png", bbox_inches='tight')
+    
+    # --- RESET MEMORY ACTIVE BUFFERS TO PREVENT CLOSURE HANGS ---
+    plt.cla()       # Clears active axis lines
+    plt.clf()       # Clears description canvas frames
+    plt.close(fig)  # Safely releases file buffer control handles
 
 def main():
-    CHART_FOLDER.mkdir( exist_ok=True )
+    CHART_FOLDER.mkdir(exist_ok=True)
     parser = argparse.ArgumentParser(description="Plot a candlestick chart for a given ticker.")
     parser.add_argument("-d", "--days", type=int, default=8, help="Number of days to include in the chart (default: 8)")
     parser.add_argument("-e", "--entry", type=str, default="0", help="Deprecated placeholder flag (automated lookup active)")
     args = parser.parse_args()
+    
     # Fetch automated entries prices and descriptive company names dictionaries
     schwab_prices, schwab_names = find_schwab_data()
+    
     files = INPUT_FOLDER.glob("*.csv")
     for file in files:
         create_chart(file, days_to_plot=args.days, schwab_prices=schwab_prices, schwab_names=schwab_names)
 
+# FIXED: Readded missing underscores to prevent execution failures
 if __name__ == "__main__":
     main()
