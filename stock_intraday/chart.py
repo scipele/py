@@ -166,6 +166,10 @@ def create_chart(csv_file, days_to_plot, schwab_prices, schwab_names):
     # -----------------------------
     # Calculate support/resistance
     # -----------------------------
+    if df.empty:
+        print(f"{ticker}: No data available, skipping chart")
+        return
+
     # Most recent trading day
     last_day = df.index[-1].date()
     recent_day = df[ df.index.date == last_day ]
