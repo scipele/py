@@ -1,5 +1,7 @@
-# Run in terminal with:
-# python3 chart.py -d 8
+# Run from terminal with:
+# Activate the virtual environment
+# source /home/dev/py/financial/.venv/bin/activate
+# python /home/dev/py/stock_intraday/chart.py --days "$chart_days"
 
 import logging
 import argparse
