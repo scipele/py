@@ -1,3 +1,6 @@
+# Run in terminal with:
+# python3 chart.py -d 8
+
 import logging
 import argparse
 import pandas as pd
