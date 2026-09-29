@@ -15,7 +15,7 @@ from calculator import RetirementPlanner
 from tabulate import tabulate
 
 
-def load_inputs_from_json(filename="/home/dev/py/financial/model_data.json"):
+def load_inputs_from_json(filename="/home/dev/py/financial_plan/input/model_data.json"):
     """Loads configuration data directly from a JSON file."""
     if not os.path.exists(filename):
         raise FileNotFoundError(f"Could not find {filename} in the current directory.")
@@ -64,7 +64,7 @@ def plot_results(balances):
     plt.show()
 
 
-def gen_report(inputs, report_filename="/home/dev/py/financial/results.md"):
+def gen_report(inputs, report_filename="/home/dev/py/financial_plan/results.md"):
     """
     Generates a deterministic financial report, completely overwriting old runs.
     Both tables are wrapped in markdown code blocks to preserve crisp visual spacing.

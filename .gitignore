@@ -1,6 +1,6 @@
-financial/model_data.json
+financial_plan/input/model_data.json
 financial/__pycache__/calculator.cpython-314.pyc
-financial/results.md
+financial_plan/output/results.md
 /home/dev/py/.vscode/
 *.csv
 *.html
