@@ -64,7 +64,7 @@ def plot_results(balances):
     plt.show()
 
 
-def gen_report(inputs, report_filename="/home/dev/py/financial_plan/results.md"):
+def gen_report(inputs, report_filename="/home/dev/py/financial_plan/output/results.md"):
     """
     Generates a deterministic financial report, completely overwriting old runs.
     Both tables are wrapped in markdown code blocks to preserve crisp visual spacing.
